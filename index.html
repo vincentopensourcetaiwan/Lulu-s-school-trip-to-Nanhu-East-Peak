@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鹿鹿走讀轉進南湖東峰 · GPX 路徑整合圖</title>
+<meta name="description" content="2026.08.13–08.18 南湖群峰縱走 GPX 軌跡整合圖：60 公里、累積上升 9,681 公尺、最高 3,643 公尺。">
+<meta property="og:title" content="鹿鹿走讀轉進南湖東峰">
+<meta property="og:description" content="6 天 60 公里 · 累積上升 9,681 公尺 · 最高 3,643 公尺">
+<meta property="og:type" content="website">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+TC:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #e4dfd2; }
+  * { box-sizing: border-box; }
+  a { color: #2f5f6b; text-decoration: none; border-bottom: 1px solid rgba(47,95,107,.35); }
+  a:hover { color: #1d4550; border-bottom-color: #1d4550; }
+  .leaflet-container { background: #eae5d8; font-family: 'Noto Serif TC', serif; outline: none; }
+  .leaflet-pane img.leaflet-tile { image-rendering: auto; }
+  .om-lbl { position: absolute; left: 0; top: 0; display: inline-block; width: max-content; font-family: 'Noto Serif TC', serif; font-size: 10.5px; line-height: 1.45; letter-spacing: .05em; color: #2b2724; white-space: nowrap; text-shadow: 0 0 3px #f2efe6, 0 0 3px #f2efe6, 0 0 7px #f2efe6, 0 0 10px #f2efe6; transition: opacity .18s ease; }
+  .om-num { font-family: 'Space Mono', monospace; }
+</style>
+</helmet>
+
+<div style="position: relative; width: 100%; height: 100vh; min-height: 430px; background: #f2efe6; color: #252420; font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; overflow: hidden;">
+
+  <div style="position: absolute; inset: 0 0 174px 336px; background: #eae5d8;">
+    <div ref="{{ mapEl }}" style="position: absolute; inset: 0;"></div>
+    <div style="position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(37,36,32,.14), inset 0 0 70px rgba(140,128,104,.16); z-index: 700;"></div>
+
+    <div style="position: absolute; top: 18px; right: 18px; z-index: 800; display: flex; flex-direction: column; gap: 1px; width: 32px; border: 1px solid rgba(37,36,32,.28); background: rgba(37,36,32,.28);">
+      <button onClick="{{ zoomIn }}" style="all: unset; cursor: pointer; display: grid; place-items: center; height: 31px; background: #f2efe6; color: #252420; font-family: 'Space Mono', monospace; font-size: 15px; line-height: 1;" style-hover="background:#e2dccb">+</button>
+      <button onClick="{{ zoomOut }}" style="all: unset; cursor: pointer; display: grid; place-items: center; height: 31px; background: #f2efe6; color: #252420; font-family: 'Space Mono', monospace; font-size: 15px; line-height: 1;" style-hover="background:#e2dccb">−</button>
+      <button onClick="{{ resetView }}" style="all: unset; cursor: pointer; display: grid; place-items: center; height: 31px; background: #f2efe6; color: #6b665e; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .04em; line-height: 1;" style-hover="background:#e2dccb;color:#252420">全</button>
+    </div>
+
+    <div style="position: absolute; bottom: 14px; left: 18px; z-index: 800; display: flex; align-items: flex-end; gap: 14px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .08em; color: #6b665e;">
+      <div style="{{ scaleBoxStyle }}">
+        <div style="display: flex; justify-content: space-between; padding: 0 1px;"><span>0</span><span>{{ scaleLabel }}</span></div>
+        <div style="width: 100%; height: 6px; border: 1px solid rgba(37,36,32,.5); border-top: none; background: linear-gradient(90deg, rgba(37,36,32,.5) 0 50%, transparent 50% 100%);"></div>
+      </div>
+      <div style="padding-bottom: 1px;">底圖 © 內政部國土測繪中心 通用版電子地圖</div>
+    </div>
+
+    <div style="position: absolute; top: 18px; left: 18px; z-index: 800; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #6b665e;">
+      <div style="width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 11px solid #252420;"></div>
+      <div style="width: 1px; height: 13px; background: rgba(37,36,32,.4);"></div>
+      <div style="font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .1em; color: #252420;">N</div>
+    </div>
+  </div>
+
+  <aside style="position: absolute; top: 0; left: 0; bottom: 0; width: 336px; z-index: 900; background: #f2efe6; border-right: 1px solid rgba(37,36,32,.22); display: block; overflow-y: auto; overflow-x: hidden;">
+
+    <header style="padding: 22px 26px 16px; border-bottom: 1px solid rgba(37,36,32,.22);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .16em; color: #6b665e; margin-bottom: 14px;">
+        <span>GPX 整合圖</span>
+        <span>24°22′N 121°24′E</span>
+      </div>
+      <h1 style="margin: 0; font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; font-weight: 500; font-size: 31px; line-height: 1.24; letter-spacing: .02em; text-wrap: pretty;">鹿鹿走讀轉進南湖東峰</h1>
+      <div style="margin-top: 13px; display: flex; align-items: center; gap: 10px;">
+        <div style="width: 26px; height: 1px; background: #252420;"></div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: .1em; color: #4a4640;">2026.08.13 — 08.18</div>
+      </div>
+    </header>
+
+    <div style="padding: 2px 0 0;">
+
+      <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 12px 26px 7px; font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: .16em; color: #8a8478;">
+        <span>逐日行程</span><span>距離 / 爬升</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column;">
+
+        <div onClick="{{ sel1 }}" style="{{ row1 }}" style-hover="background:#eae5d8">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 12px; padding-top: 5px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.71 0.05 200); box-shadow: 0 0 0 2.5px #f2efe6;"></div>
+            <div style="flex: 1; width: 1px; background: rgba(37,36,32,.2); margin-top: 3px;"></div>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #6b665e;">D1</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8a8478;">08/13</span>
+              <span style="font-size: 15px; letter-spacing: .04em;">四季 · 起登</span>
+            </div>
+            <div style="margin-top: 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #6b665e; letter-spacing: .02em;">10.6 km　↑1,447　1,266→2,350 m</div>
+          </div>
+        </div>
+
+        <div onClick="{{ sel2 }}" style="{{ row2 }}" style-hover="background:#eae5d8">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 12px; padding-top: 5px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.645 0.062 200); box-shadow: 0 0 0 2.5px #f2efe6;"></div>
+            <div style="flex: 1; width: 1px; background: rgba(37,36,32,.2); margin-top: 3px;"></div>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #6b665e;">D2</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8a8478;">08/14</span>
+              <span style="font-size: 15px; letter-spacing: .04em;">推進</span>
+            </div>
+            <div style="margin-top: 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #6b665e; letter-spacing: .02em;">2.1 km　↑357　2,044→2,280 m</div>
+          </div>
+        </div>
+
+        <div onClick="{{ sel3 }}" style="{{ row3 }}" style-hover="background:#eae5d8">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 12px; padding-top: 5px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.58 0.072 200); box-shadow: 0 0 0 2.5px #f2efe6;"></div>
+            <div style="flex: 1; width: 1px; background: rgba(37,36,32,.2); margin-top: 3px;"></div>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #6b665e;">D3</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8a8478;">08/15</span>
+              <span style="font-size: 15px; letter-spacing: .04em;">高繞轉進</span>
+            </div>
+            <div style="margin-top: 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #6b665e; letter-spacing: .02em;">13.7 km　↑2,751　2,220→2,818 m</div>
+          </div>
+        </div>
+
+        <div onClick="{{ sel4 }}" style="{{ row4 }}" style-hover="background:#eae5d8">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 12px; padding-top: 5px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.515 0.08 200); box-shadow: 0 0 0 2.5px #f2efe6;"></div>
+            <div style="flex: 1; width: 1px; background: rgba(37,36,32,.2); margin-top: 3px;"></div>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #6b665e;">D4</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8a8478;">08/16</span>
+              <span style="font-size: 15px; letter-spacing: .04em;">上稜</span>
+            </div>
+            <div style="margin-top: 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #6b665e; letter-spacing: .02em;">10.3 km　↑1,717　2,789→3,595 m</div>
+          </div>
+        </div>
+
+        <div onClick="{{ sel5 }}" style="{{ row5 }}" style-hover="background:#eae5d8">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 12px; padding-top: 5px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.45 0.085 200); box-shadow: 0 0 0 2.5px #f2efe6;"></div>
+            <div style="flex: 1; width: 1px; background: rgba(37,36,32,.2); margin-top: 3px;"></div>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #6b665e;">D5</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8a8478;">08/17</span>
+              <span style="font-size: 15px; letter-spacing: .04em;">南湖東峰</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: .1em; color: #f2efe6; background: #252420; padding: 2px 5px 1.5px;">最高</span>
+            </div>
+            <div style="margin-top: 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #6b665e; letter-spacing: .02em;">10.4 km　↑2,003　2,525→3,643 m</div>
+          </div>
+        </div>
+
+        <div onClick="{{ sel6 }}" style="{{ row6 }}" style-hover="background:#eae5d8">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 12px; padding-top: 5px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.385 0.08 200); box-shadow: 0 0 0 2.5px #f2efe6;"></div>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #6b665e;">D6</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8a8478;">08/18</span>
+              <span style="font-size: 15px; letter-spacing: .04em;">下撤</span>
+            </div>
+            <div style="margin-top: 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #6b665e; letter-spacing: .02em;">13.0 km　↓2,140　2,786→1,857 m</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid rgba(37,36,32,.22); padding: 13px 26px 17px; background: #eeeadf;">
+      <div style="font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: .16em; color: #8a8478; margin-bottom: 9px;">全程總計</div>
+      <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 10px; align-items: end;">
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 2px;"><span style="font-family: 'Space Mono', monospace; font-size: 18px; letter-spacing: -.02em;">60.0</span><span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #6b665e;">km</span></div>
+          <div style="font-size: 10px; letter-spacing: .08em; color: #6b665e; margin-top: 2px;">總距離</div>
+        </div>
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 2px;"><span style="font-family: 'Space Mono', monospace; font-size: 18px; letter-spacing: -.02em;">9,681</span><span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #6b665e;">m</span></div>
+          <div style="font-size: 10px; letter-spacing: .08em; color: #6b665e; margin-top: 2px;">累積上升</div>
+        </div>
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 2px;"><span style="font-family: 'Space Mono', monospace; font-size: 18px; letter-spacing: -.02em;">3,643</span><span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #6b665e;">m</span></div>
+          <div style="font-size: 10px; letter-spacing: .08em; color: #6b665e; margin-top: 2px;">最高點</div>
+        </div>
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 2px;"><span style="font-family: 'Space Mono', monospace; font-size: 18px; letter-spacing: -.02em;">6</span><span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #6b665e;">天</span></div>
+          <div style="font-size: 10px; letter-spacing: .08em; color: #6b665e; margin-top: 2px;">天數</div>
+        </div>
+      </div>
+      <div style="margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(37,36,32,.14); font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .04em; color: #8a8478; line-height: 1.65;">28 個 GPX 檔 · 9 條獨立軌跡 · 去重後 6,804 點</div>
+    </div>
+  </aside>
+
+  <footer style="position: absolute; bottom: 0; left: 336px; right: 0; height: 174px; z-index: 900; background: #f2efe6; border-top: 1px solid rgba(37,36,32,.22); padding: 15px 30px 13px 62px;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+      <div style="font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: .16em; color: #8a8478;">海拔剖面 · 沿線累積距離　·　斷開處為 GPS 未記錄區間</div>
+      <div style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #252420; min-height: 14px;">{{ readout }}</div>
+    </div>
+
+    <div ref="{{ plotEl }}" onMouseMove="{{ onPlotMove }}" onMouseLeave="{{ onPlotLeave }}" style="position: relative; height: 96px; cursor: crosshair;">
+      <div style="position: absolute; inset: 0; pointer-events: none;">
+        <div style="position: absolute; left: 0; right: 0; top: 8%; border-top: 1px dashed rgba(37,36,32,.16);"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 28%; border-top: 1px dashed rgba(37,36,32,.16);"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 48%; border-top: 1px dashed rgba(37,36,32,.16);"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 68%; border-top: 1px dashed rgba(37,36,32,.16);"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 88%; border-top: 1px dashed rgba(37,36,32,.16);"></div>
+        <div style="position: absolute; left: -54px; top: 8%; transform: translateY(-50%); font-family: 'Space Mono', monospace; font-size: 8.5px; color: #8a8478;">3,500</div>
+        <div style="position: absolute; left: -54px; top: 28%; transform: translateY(-50%); font-family: 'Space Mono', monospace; font-size: 8.5px; color: #8a8478;">3,000</div>
+        <div style="position: absolute; left: -54px; top: 48%; transform: translateY(-50%); font-family: 'Space Mono', monospace; font-size: 8.5px; color: #8a8478;">2,500</div>
+        <div style="position: absolute; left: -54px; top: 68%; transform: translateY(-50%); font-family: 'Space Mono', monospace; font-size: 8.5px; color: #8a8478;">2,000</div>
+        <div style="position: absolute; left: -54px; top: 88%; transform: translateY(-50%); font-family: 'Space Mono', monospace; font-size: 8.5px; color: #8a8478;">1,500</div>
+      </div>
+
+      <svg viewBox="0 0 1000 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;">
+        <sc-for list="{{ profile }}" as="p" hint-placeholder-count="6">
+          <g>
+            <path d="{{ p.area }}" fill="{{ p.fill }}"></path>
+            <path d="{{ p.line }}" fill="none" stroke="{{ p.stroke }}" stroke-width="{{ p.w }}" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+          </g>
+        </sc-for>
+        <line x1="{{ cursorX }}" x2="{{ cursorX }}" y1="0" y2="100" stroke="#252420" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke" opacity="{{ cursorOn }}"></line>
+      </svg>
+
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(37,36,32,.4);"></div>
+
+      <sc-for list="{{ marks }}" as="m" hint-placeholder-count="6">
+        <div style="{{ m.style }}">
+          <div style="width: 1px; height: 5px; background: rgba(37,36,32,.4);"></div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: .06em; color: #6b665e; padding-top: 3px;">{{ m.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 22px; font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: .08em; color: #8a8478;">
+      <span>0 km</span><span>點選左側日程可單獨檢視 · 滑過剖面圖定位</span><span>60 km</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;basemap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;復古紙地形&quot;,&quot;極簡灰階&quot;,&quot;無底圖&quot;],&quot;default&quot;:&quot;復古紙地形&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;地圖&quot;},&quot;showWaypoints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;地圖&quot;},&quot;trackWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.6,&quot;min&quot;:1.5,&quot;max&quot;:5,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;路徑&quot;}}">
+const RAMP = ['oklch(0.71 0.05 200)','oklch(0.645 0.062 200)','oklch(0.58 0.072 200)','oklch(0.515 0.08 200)','oklch(0.45 0.085 200)','oklch(0.385 0.08 200)'];
+const PAPER = '#f2efe6', INK = '#252420';
+const E0 = 1250, E1 = 3750;
+
+function hav(a, b) {
+  const R = 6371, r = x => x * Math.PI / 180;
+  const dLat = r(b[0] - a[0]), dLon = r(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+class Component extends DCLogic {
+  state = { data: null, sel: 0, hover: null, scale: { w: 84, label: '2 km' } };
+
+  componentDidMount() {
+    fetch('./trip.json').then(r => r.json()).then(data => {
+      this.setState({ data }, () => { this.buildMap(); });
+    }).catch(e => console.warn('trip.json', e));
+    this._ro = new ResizeObserver(() => { if (this._map) this._map.invalidateSize(); });
+    if (this._mapEl) this._ro.observe(this._mapEl);
+  }
+
+  componentWillUnmount() { if (this._ro) this._ro.disconnect(); if (this._map) this._map.remove(); }
+
+  waitL(cb, n) {
+    if (window.L) return cb();
+    if ((n || 0) > 100) return;
+    setTimeout(() => this.waitL(cb, (n || 0) + 1), 60);
+  }
+
+  buildMap() {
+    this.waitL(() => {
+      const d = this.state.data;
+      if (!d || !this._mapEl || this._map) return;
+      const L = window.L;
+      const map = L.map(this._mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.25, minZoom: 10, maxZoom: 16 });
+      this._map = map;
+      this._bounds = L.latLngBounds([[d.bbox[0], d.bbox[1]], [d.bbox[2], d.bbox[3]]]).pad(0.08);
+      map.fitBounds(this._bounds);
+
+      map.createPane('base'); map.getPane('base').style.zIndex = 200;
+      this._basePane = map.getPane('base');
+      this.applyTiles();
+
+      map.on('zoomend moveend', () => { this.updateScale(); this.layoutLabels(); });
+      this.updateScale();
+
+      const w = this.props.trackWeight || 2.6;
+      this._casings = []; this._lines = [];
+      d.days.forEach((day, i) => {
+        day.lines.forEach(seg => {
+          const ll = seg.map(p => [p[0], p[1]]);
+          this._casings.push(L.polyline(ll, { color: PAPER, weight: w + 3, opacity: 0.85, lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(map));
+          const pl = L.polyline(ll, { color: RAMP[i], weight: w, opacity: 0.95, lineJoin: 'round', lineCap: 'round' }).addTo(map);
+          pl._day = i;
+          pl.on('click', () => this.setState(s => ({ sel: s.sel === i + 1 ? 0 : i + 1 })));
+          pl.on('mouseover', () => pl.setStyle({ weight: w + 1.6 }));
+          pl.on('mouseout', () => pl.setStyle({ weight: this._selW(i) }));
+          this._lines.push(pl);
+        });
+      });
+
+      const dot = (fill, stroke, size) => L.divIcon({ className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        html: '<div style="width:100%;height:100%;border-radius:50%;background:' + fill + ';border:1.5px solid ' + stroke + ';box-shadow:0 0 0 2px rgba(242,239,230,.9)"></div>' });
+
+      this._pins = []; this._labelItems = []; this._wpLayers = [];
+      const addPin = (lat, lon, icon) => {
+        const m = L.marker([lat, lon], { icon, interactive: false, keyboard: false }).addTo(map);
+        this._pins.push(m); return m;
+      };
+      const addLabel = (lat, lon, text, fs, color, prio, wp) => {
+        const m = addPin(lat, lon, L.divIcon({ className: '', iconSize: [0, 0], iconAnchor: [0, 0],
+          html: '<div class="om-lbl" style="font-size:' + fs + 'px;color:' + color + ';letter-spacing:' + (fs > 11 ? '.1em' : '.05em') + '">' + text + '</div>' }));
+        const el = m.getElement();
+        this._labelItems.push({ lat, lon, text, fs, prio, wp: !!wp, el: el && el.firstElementChild });
+        return m;
+      };
+
+      const first = d.days[0].lines[0][0];
+      const lastLine = d.days[5].lines[d.days[5].lines.length - 1];
+      const last = lastLine[lastLine.length - 1];
+
+      addPin(first[0], first[1], dot(INK, PAPER, 11));
+      addLabel(first[0], first[1], '起點 1,266 m', 11, INK, 100);
+      addPin(last[0], last[1], dot(PAPER, INK, 11));
+      addLabel(last[0], last[1], '終點 1,857 m', 11, INK, 100);
+
+      d.days.slice(0, 5).forEach((day, i) => {
+        const ln = day.lines[day.lines.length - 1];
+        const p = ln[ln.length - 1];
+        addPin(p[0], p[1], L.divIcon({ className: '', iconSize: [9, 9], iconAnchor: [4.5, 4.5],
+          html: '<div style="width:100%;height:100%;background:' + PAPER + ';border:1.5px solid ' + INK + ';transform:rotate(45deg)"></div>' }));
+        addLabel(p[0], p[1], 'C' + (i + 1) + '　' + p[2] + ' m', 10, '#4a4640', 60);
+      });
+
+      let hi = null;
+      d.days.forEach(day => day.lines.forEach(seg => seg.forEach(p => { if (p[2] != null && (!hi || p[2] > hi[2])) hi = p; })));
+      if (hi) {
+        addPin(hi[0], hi[1], L.divIcon({ className: '', iconSize: [13, 13], iconAnchor: [6.5, 6.5],
+          html: '<div style="width:0;height:0;border-left:6.5px solid transparent;border-right:6.5px solid transparent;border-bottom:11px solid ' + INK + '"></div>' }));
+        addLabel(hi[0], hi[1], '南湖東峰 ' + hi[2] + ' m', 12.5, INK, 120);
+      }
+
+      const kept = [];
+      (d.waypoints || []).forEach(wp => {
+        if (/^水池/.test(wp.name)) return;
+        if (kept.some(k => hav([k.lat, k.lon], [wp.lat, wp.lon]) < 0.18)) return;
+        kept.push(wp);
+        this._wpLayers.push(addPin(wp.lat, wp.lon, L.divIcon({ className: '', iconSize: [5, 5], iconAnchor: [2.5, 2.5],
+          html: '<div style="width:100%;height:100%;border-radius:50%;background:#6b665e"></div>' })));
+        this._wpLayers.push(addLabel(wp.lat, wp.lon, wp.name, 9.5, '#6b665e', 20, true));
+      });
+
+      this._cursor = L.circleMarker([first[0], first[1]], { radius: 5, color: INK, weight: 1.5, fillColor: PAPER, fillOpacity: 1, interactive: false });
+      this._applied = { basemap: this.props.basemap, showWaypoints: this.props.showWaypoints, sel: this.state.sel, weight: this.props.trackWeight };
+      this.layoutLabels();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.layoutLabels());
+      setTimeout(() => this.layoutLabels(), 400);
+    });
+  }
+
+  updateScale() {
+    const map = this._map, el = this._mapEl;
+    if (!map || !el) return;
+    const y = Math.round(el.clientHeight / 2);
+    const mPerPx = map.distance(map.containerPointToLatLng([0, y]), map.containerPointToLatLng([100, y])) / 100;
+    if (!isFinite(mPerPx) || mPerPx <= 0) return;
+    const ladder = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+    let d = ladder[0];
+    for (const c of ladder) { if (c / mPerPx <= 112) d = c; }
+    const next = { w: Math.round(d / mPerPx), label: d >= 1000 ? (d / 1000) + ' km' : d + ' m' };
+    const cur = this.state.scale;
+    if (cur.w !== next.w || cur.label !== next.label) this.setState({ scale: next });
+  }
+
+  measure(text, fs) {
+    if (!this._ctx) this._ctx = document.createElement('canvas').getContext('2d');
+    this._ctx.font = fs + "px 'Noto Serif TC', 'Space Mono', serif";
+    return this._ctx.measureText(text).width;
+  }
+
+  layoutLabels() {
+    const map = this._map, items = this._labelItems;
+    if (!map || !items || !items.length) return;
+    const size = map.getSize(), placed = [];
+    const showWp = this.props.showWaypoints !== false;
+    const hit = (a, b) => a.x < b.x + b.w + 4 && a.x + a.w + 4 > b.x && a.y < b.y + b.h + 2 && a.y + a.h + 2 > b.y;
+    items.slice().sort((a, b) => b.prio - a.prio).forEach(it => {
+      if (!it.el) return;
+      if (it.wp && !showWp) { it.el.style.opacity = '0'; return; }
+      const p = map.latLngToContainerPoint([it.lat, it.lon]);
+      const w = this.measure(it.text, it.fs), h = it.fs * 1.45;
+      const cands = [[11, -h / 2], [-(w + 11), -h / 2], [11, 5], [-(w + 11), 5], [-w / 2, -h - 9], [-w / 2, 11], [11, -h - 6], [-(w + 11), -h - 6]];
+      let got = null;
+      for (const c of cands) {
+        const box = { x: p.x + c[0], y: p.y + c[1], w, h };
+        if (box.x < 4 || box.x + w > size.x - 4 || box.y < 2 || box.y + h > size.y - 2) continue;
+        if (placed.some(b => hit(box, b))) continue;
+        got = c; placed.push(box); break;
+      }
+      it.el.style.transform = got ? 'translate(' + got[0].toFixed(1) + 'px,' + got[1].toFixed(1) + 'px)' : 'none';
+      it.el.style.opacity = got ? '1' : '0';
+    });
+  }
+
+  applyTiles() {
+    const map = this._map, L = window.L;
+    if (!map) return;
+    const mode = this.props.basemap || '復古紙地形';
+    if (this._baseTile) { map.removeLayer(this._baseTile); this._baseTile = null; }
+    if (mode === '無底圖') { this._basePane.style.filter = 'none'; return; }
+    this._basePane.style.filter = mode === '極簡灰階'
+      ? 'grayscale(1) contrast(.92) brightness(1.08)'
+      : 'grayscale(.8) sepia(.46) contrast(.94) brightness(1.06) saturate(1.1)';
+    this._baseTile = L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}',
+      { maxZoom: 17, pane: 'base' }).addTo(map);
+  }
+
+  _selW(i) {
+    const w = this.props.trackWeight || 2.6;
+    const s = this.state.sel;
+    return s === 0 ? w : (s === i + 1 ? w + 1.2 : Math.max(1, w - 1.2));
+  }
+
+  schedule() {
+    if (this._queued) return;
+    this._queued = true;
+    Promise.resolve().then(() => { this._queued = false; this.sync(); });
+  }
+
+  sync() {
+    const map = this._map, a = this._applied;
+    if (!map || !a) return;
+    const p = this.props, sel = this.state.sel;
+
+    if (a.basemap !== p.basemap) { a.basemap = p.basemap; this.applyTiles(); }
+
+    if (a.showWaypoints !== p.showWaypoints) {
+      a.showWaypoints = p.showWaypoints;
+      const on = p.showWaypoints !== false;
+      (this._wpLayers || []).forEach(m => { const e = m.getElement(); if (e) e.style.display = on ? '' : 'none'; });
+      this.layoutLabels();
+    }
+
+    if (a.sel !== sel || a.weight !== p.trackWeight) {
+      const moved = a.sel !== sel;
+      a.sel = sel; a.weight = p.trackWeight;
+      (this._lines || []).forEach(pl => {
+        const on = sel === 0 || pl._day === sel - 1;
+        pl.setStyle({ weight: this._selW(pl._day), opacity: on ? 0.95 : 0.28, color: on ? RAMP[pl._day] : '#9a948a' });
+      });
+      (this._casings || []).forEach(c => c.setStyle({ opacity: sel === 0 ? 0.85 : 0.4 }));
+      if (moved) {
+        const b = sel === 0 ? this._bounds
+          : window.L.latLngBounds([[this.state.data.days[sel - 1].bbox[0], this.state.data.days[sel - 1].bbox[1]],
+                                   [this.state.data.days[sel - 1].bbox[2], this.state.data.days[sel - 1].bbox[3]]]).pad(0.22);
+        map.flyToBounds(b, { duration: 0.7 });
+      }
+    }
+  }
+
+  flat() {
+    if (this._flat) return this._flat;
+    const d = this.state.data;
+    if (!d) return null;
+    const pts = [], bands = [];
+    let km = 0;
+    d.days.forEach((day, i) => {
+      const x0 = km, dayPts = [];
+      day.lines.forEach(seg => {
+        let brk = true;
+        for (let j = 0; j < seg.length; j++) {
+          if (j > 0) km += hav(seg[j - 1], seg[j]);
+          if (seg[j][2] == null) continue;
+          const rec = { km, ele: seg[j][2], lat: seg[j][0], lon: seg[j][1], day: i, brk };
+          brk = false;
+          pts.push(rec); dayPts.push(rec);
+        }
+      });
+      bands.push({ i, x0, x1: km, pts: dayPts });
+    });
+    this._flat = { pts, bands, total: km };
+    return this._flat;
+  }
+
+  renderVals() {
+    this.schedule();
+    const f = this.flat();
+    const sel = this.state.sel;
+    const rowBase = 'display:flex;gap:12px;padding:9px 26px;cursor:pointer;border-bottom:1px solid rgba(37,36,32,.09);transition:background .15s;';
+    const row = i => rowBase + (sel === i
+      ? 'background:#e8e3d6;box-shadow:inset 3px 0 0 ' + RAMP[i - 1] + ';'
+      : (sel === 0 ? '' : 'opacity:.45;'));
+    const selFn = i => () => this.setState(s => ({ sel: s.sel === i ? 0 : i }));
+
+    const vals = {
+      mapEl: el => { this._mapEl = el; if (el && this._ro) this._ro.observe(el); },
+      plotEl: el => { this._plotEl = el; },
+      zoomIn: () => this._map && this._map.zoomIn(1),
+      zoomOut: () => this._map && this._map.zoomOut(1),
+      resetView: () => this.setState({ sel: 0 }, () => this._map && this._map.flyToBounds(this._bounds, { duration: 0.7 })),
+      scaleLabel: this.state.scale.label,
+      scaleBoxStyle: 'display:flex;flex-direction:column;gap:3px;width:' + this.state.scale.w + 'px;transition:width .25s ease;',
+      sel1: selFn(1), sel2: selFn(2), sel3: selFn(3), sel4: selFn(4), sel5: selFn(5), sel6: selFn(6),
+      row1: row(1), row2: row(2), row3: row(3), row4: row(4), row5: row(5), row6: row(6),
+      profile: [], marks: [], readout: '', cursorX: 0, cursorOn: 0,
+      onPlotMove: e => {
+        const ff = this.flat(); if (!ff || !this._plotEl) return;
+        const r = this._plotEl.getBoundingClientRect();
+        const km = Math.max(0, Math.min(ff.total, (e.clientX - r.left) / r.width * ff.total));
+        let best = ff.pts[0], bd = Infinity;
+        for (const p of ff.pts) { const dd = Math.abs(p.km - km); if (dd < bd) { bd = dd; best = p; } }
+        this.setState({ hover: best });
+        if (this._cursor && this._map) { this._cursor.setLatLng([best.lat, best.lon]); if (!this._map.hasLayer(this._cursor)) this._cursor.addTo(this._map); }
+      },
+      onPlotLeave: () => {
+        this.setState({ hover: null });
+        if (this._cursor && this._map && this._map.hasLayer(this._cursor)) this._map.removeLayer(this._cursor);
+      }
+    };
+
+    if (!f) return vals;
+
+    const X = km => km / f.total * 1000;
+    const Y = e => (E1 - Math.max(E0, Math.min(E1, e))) / (E1 - E0) * 100;
+    const step = Math.max(1, Math.floor(f.pts.length / 900));
+
+    vals.profile = f.bands.map(b => {
+      const ps = b.pts.filter((p, j) => j % step === 0 || j === b.pts.length - 1 || p.brk);
+      if (!ps.length) return { line: '', area: '', stroke: RAMP[b.i], fill: 'none', w: 1.6 };
+      const runs = [];
+      ps.forEach((p, j) => { if (j === 0 || p.brk) runs.push([]); runs[runs.length - 1].push(p); });
+      const pt = (p, c) => c + X(p.km).toFixed(2) + ' ' + Y(p.ele).toFixed(2);
+      const on = sel === 0 || sel === b.i + 1;
+      return {
+        line: runs.map(r => r.map((p, j) => pt(p, j ? 'L' : 'M')).join(' ')).join(' '),
+        area: runs.filter(r => r.length > 1).map(r =>
+          'M' + X(r[0].km).toFixed(2) + ' 100 ' + r.map(p => pt(p, 'L')).join(' ') +
+          ' L' + X(r[r.length - 1].km).toFixed(2) + ' 100 Z').join(' '),
+        stroke: on ? RAMP[b.i] : '#b0aaa0',
+        fill: on ? 'rgba(37,36,32,.055)' : 'rgba(37,36,32,.02)',
+        w: sel === b.i + 1 ? 2.4 : 1.6
+      };
+    });
+
+    vals.marks = f.bands.map(b => ({
+      label: 'D' + (b.i + 1),
+      style: 'position:absolute;top:100%;left:' + (X(b.x0) / 10).toFixed(2) + '%;display:flex;flex-direction:column;align-items:flex-start;padding-left:4px;'
+    }));
+
+    const h = this.state.hover;
+    vals.readout = h ? (h.km.toFixed(1) + ' km　·　' + h.ele.toLocaleString() + ' m　·　D' + (h.day + 1)) : '';
+    vals.cursorX = h ? +X(h.km).toFixed(2) : 0;
+    vals.cursorOn = h ? 1 : 0;
+    return vals;
+  }
+}
+</script>
+</body>
+</html>
